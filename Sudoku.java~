@@ -123,35 +123,26 @@ class Sudoku
         }
     }
     
-    public void placeNumber(PriorityQueue<Possibility> intel)throws Exception{ //give placeNumber some intel so it does not have to waste time trying numbers we already know lead to nowhere  
+    public void placeNumber(Queue<Possibility> intel)throws Exception{ //give placeNumber some intel so it does not have to waste time trying numbers we already know lead to nowhere  
           Possibility p=intel.poll();
-          //System.out.println("intel");
-         // System.out.println(intel.size());
            if (p == null)throw new Exception( "Success!" );
-          int[] arrayOfPossibilities = new int[p.getSize()];
-          arrayOfPossibilities =  p.getArray();
+          int[] arrayOfPossibilities = p.getArray();
           int x = p.getLocationX();
           int y = p.getLocationY();
-          if (Grid[x][y]==0){
+          
           for (int i=0;i<arrayOfPossibilities.length;i++){
-            //System.out.println(arrayOfPossibilities[i]);
             if(checkAll(x,y,arrayOfPossibilities[i])){
-              Grid[x][y]=arrayOfPossibilities[i];
+             // fastSolve();
+             Grid[x][y]=arrayOfPossibilities[i];
+              System.out.println(p.getSize());
               placeNumber(intel); // pass down the intel
             }
-            //Grid[x][y]=0;
+            Grid[x][y]=0;
              //placeNumber(intel);
           }
-          Grid[x][y]=0;
-          intel.add(p);//need to push it back if a "leaf" resolved. Really complicated, but its because PriorityQueues are objects and they are passed by reference, which means things you do in a recursion actually affects the other recursions
-         
-          //populatePossibilities(intel);
-          }
-          else {
-            //System.out.println("never");
-          placeNumber(intel);
-          }
           //Grid[x][y]=0;
+          
+        
     }
     
     /* The solve() method should remove all the unknown characters ('x') in the Grid
@@ -164,45 +155,49 @@ class Sudoku
         }
     }
     
-    public void populatePossibilities( PriorityQueue<Possibility> pQueue){ //Populates Possibility objects adepending on the present grid nd returns a queue that prioritizes possibilities with lowest size
-      int counter=0;
-      for (int row=0; row<N; row++){
+    public void populatePossibilities( Queue<Possibility> pQueue){ //Populates Possibility objects adepending on the present grid nd returns a queue that prioritizes possibilities with lowest size
+        for (int row=0; row<N; row++){
         for (int col=0; col<N; col++){
           if (Grid[row][col]==0){
           int[] tmp = new int[N];
           int tmpCounter=0;
           for(int j=1; j<=N; j++){
+            
             if (checkAll(row, col, j)){
               tmp[tmpCounter]=j;
               tmpCounter++;
             }
           }
-          counter++;
           tmp=resizeArray(tmp);//must resize so I know my priority: cells with smallest numbers of possibility can be dealt with first
             pQueue.add(new Possibility(tmp, tmp.length,row, col));
+            //   System.out.println(tmp.length);
         }
       }
     }
     }
     public void fastSolve(){
-      PriorityQueue<Possibility> possibilityPriorityQueue = new PriorityQueue<Possibility>(SIZE*SIZE*SIZE, sizeComparator);
+      Queue<Possibility> possibilityPriorityQueue = new PriorityQueue<>(SIZE*SIZE*SIZE, sizeComparator);
+     // System.out.print("SIZE IS:   ");
+     // System.out.print(possibilityPriorityQueue.size());
       populatePossibilities(possibilityPriorityQueue);
+      
       while(possibilityPriorityQueue.peek().getSize()==1){ //double the while loop so I can update the possibilities by "rounds" and not each time I add a number
    while(possibilityPriorityQueue.peek().getSize()==1){ //fill cells that have only 1 possible number that fits
             Possibility p = possibilityPriorityQueue.poll();
             if(p == null) break;
             Grid[p.getLocationX()][p.getLocationY()] = p.getArray()[0];
+            //System.out.println("Processing Customer with ID= " + p.getSize());
+            
         }
-   possibilityPriorityQueue = new PriorityQueue<Possibility>(SIZE*SIZE*SIZE, sizeComparator);//reinistialize the possibilities
     populatePossibilities(possibilityPriorityQueue);
     }
-      
-      
-      
+      populatePossibilities(possibilityPriorityQueue);
+      //System.out.print("SIZE IS:   ");
+      //System.out.print(possibilityPriorityQueue.size());
       solve(possibilityPriorityQueue);//After fastSolve cant do anything anymore, pass down the possiblities to a smart version of solve to see what it can do with it
     }
     
-    public void solve(PriorityQueue<Possibility> intel){//pass some intel to help solve() place numbers faster
+    public void solve(Queue<Possibility> intel){//pass some intel to help solve() place numbers faster
     try {
         placeNumber(intel);
       }
